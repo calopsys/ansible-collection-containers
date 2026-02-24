@@ -1,0 +1,19 @@
+---
+argument_specs:
+  main:
+    short_description: "Install and configure a Docker instance on Debian systems."
+    options:
+      calopsys_docker_config_daemon_template:
+        type: "str"
+        description: "Local path to custom Docker daemon template configuration file"
+      calopsys_docker_compose_workdir:
+        type: "str"
+        description: "Working directory of the compose application."
+        default: "/opt/compose"
+      calopsys_docker_compose_template:
+        type: "str"
+        description: "Local path to the Docker compose template file."
+      calopsys_docker_compose_wait_timeout:
+        type: "int"
+        description: "The amount of seconds to wait for services to be running/healthy."
+        default: 300

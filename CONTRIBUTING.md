@@ -1,0 +1,109 @@
+# Contributing
+
+## Clone
+
+The collection **must** be cloned into a valid collection root (e.g. it must contain `ansible_collections/namespace/collection_name`), for example:
+
+```bash
+git clone git@github.com:calopsys/ansible-collection-containers.git ~/git/ansible_collections/calopsys/containers
+```
+
+## Linting
+
+You can install `ansible-lint` for linting :
+
+```bash
+pipx install ansible-lint
+```
+
+Then you can use the Makefile :
+
+```bash
+make lint
+```
+
+## Testing
+
+You can use the Makefile to start the sanity tests, which uses `ansible-test` (bundled in `ansible-core`) :
+
+```bash
+make test.sanity
+```
+
+### Molecule Tests
+
+This collection uses [Molecule](https://molecule.readthedocs.io/) for integration testing with podman. Molecule provides:
+- Container-based test instances
+- Automatic idempotency verification (runs the role twice to ensure no changes on second run)
+- Verification tests after converge
+
+```bash
+make molecule              # Run molecule tests for all roles
+make molecule role=rolename   # Run molecule tests for a specific role
+```
+
+Individual molecule commands:
+
+```bash
+make molecule.create role=rolename      # Create test instance
+make molecule.converge role=rolename    # Apply the role
+make molecule.verify role=rolename      # Run verification tests
+make molecule.idempotence role=rolename # Verify idempotency
+make molecule.destroy role=rolename     # Destroy test instance
+```
+
+Molecule tests are located in `extensions/molecule/`:
+- `config.yml` - Global driver and platform configuration
+- `<scenario>/molecule.yml` - Scenario-specific configuration
+- `<scenario>/prepare.yml` - Prepare test instance (install dependencies)
+- `<scenario>/converge.yml` - Playbook that applies the role
+- `<scenario>/verify.yml` - Verification tests
+
+For more information, see [Molecule documentation](https://molecule.readthedocs.io/).
+
+## Documentation
+
+To generate role documentation you can install `aar-doc` :
+
+```bash
+pipx install aar-doc
+```
+
+For roles, fill in `meta/main.yml` and `meta/argument_specs.yml` with your variables ([more info](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-argument-validation)).
+
+Then use the Makefile :
+
+```bash
+make docs
+make docs role=rolename
+```
+
+## Changelogs
+
+To generate changelogs you can install `antsibull-changelog` :
+
+```bash
+pipx install antsibull-changelog
+```
+
+Then create changelog fragments in `changelogs/fragments/` and use the Makefile :
+
+```bash
+make changelog.lint
+make changelog.release
+```
+
+For more information, see [antsibull-changelog documentation](https://ansible.readthedocs.io/projects/antsibull-changelog/).
+
+## Build
+
+You can build the collection with the Makefile :
+```bash
+make build
+```
+
+And then install it in an Ansible repo elsewhere :
+```bash
+cd ~/bla
+ansible-galaxy collection install ~/git/ansible_collections/calopsys/containers/build/calopsys-containers-1.0.0.tar.gz -p ./collections
+```

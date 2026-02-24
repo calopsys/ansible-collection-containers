@@ -1,0 +1,26 @@
+---
+namespace: calopsys
+name: containers
+readme: README.md
+authors:
+  - Calopsys <tech@calopsys.fr>
+license_file: 'LICENSE'
+repository: https://github.com/calopsys/ansible-collection-containers
+issues: https://github.com/calopsys/ansible-collection-containers/issues
+documentation: https://github.com/calopsys/ansible-collection-containers
+homepage: https://www.calopsys.fr
+tags: ['linux']
+
+version: 1.0.0
+description: Installs, manages and configure container engines on a Debian system.
+dependencies:
+  community.docker: "5.0.6"
+build_ignore:
+  - .gitignore
+  - .ansible-lint
+  - .github
+  - build
+  - changelogs/fragments
+  - tests
+  - Makefile
+  - AGENTS.md
