@@ -1,0 +1,12 @@
+---
+- name: "systemctl restart docker"
+  ansible.builtin.systemd_service:
+    name: "docker"
+    state: "restarted"
+
+- name: "docker-compose up"
+  community.docker.docker_compose_v2:
+    project_src: "{{ calopsys_docker_compose_workdir }}"
+    state: present
+    wait: true
+    wait_timeout: "{{ calopsys_docker_compose_wait_timeout }}"

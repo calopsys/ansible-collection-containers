@@ -1,0 +1,12 @@
+---
+dependencies: []
+
+galaxy_info:
+  role_name: docker
+  author: Calopsys
+  company: Calopsys
+  description: This role installs, manages and configures the Docker daemon on Debian systems.
+  license: MIT
+  min_ansible_version: 2.18.0
+  issue_tracker_url: https://github.com/calopsys/ansible-collection-containers/issues
+  platforms: []

@@ -1,0 +1,66 @@
+# Calopsys Ansible Collection - containers
+
+An Ansible collection for the `calopsys` namespace.
+
+## Requirements
+
+- Ansible Core >= 2.18.0
+- Target: Debian-based systems
+
+## Installation
+
+Create a `galaxy_requirements.yml` file:
+
+```yaml
+collections:
+  - name: git@github.com:calopsys/ansible-collection-containers.git
+    type: git
+    version: "1.0.0"
+```
+
+Then run:
+```bash
+ansible-galaxy collection install -r galaxy_requirements.yml
+```
+
+## Usage
+
+Add roles to your playbook:
+
+```yaml
+- name: "Deploy containers."
+  hosts: all
+  roles:
+    - role: calopsys.containers.docker
+```
+
+## Role Variables
+
+Each role has its own set of variables documented in the respective `REFERENCE.md` files.
+
+## Development
+
+### Testing
+```bash
+make test.sanity              # Run ansible-test sanity
+make molecule                 # Run molecule tests for all roles
+make molecule role=docker   # Run molecule tests for a specific role
+make test                     # Run lint, sanity, and molecule tests
+```
+
+Molecule tests use podman and include idempotency verification (runs the role twice to ensure no changes on second run).
+
+### Building
+```bash
+make build
+```
+
+### Documentation
+```bash
+make docs
+make docs role=docker
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.

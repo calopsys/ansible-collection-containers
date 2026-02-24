@@ -1,0 +1,60 @@
+---
+- name: Verify
+  hosts: instance
+  become: true
+  tasks:
+    - name: "Verify docker-ce package is installed"
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: "Assert docker-ce package is installed"
+      ansible.builtin.assert:
+        that:
+          - "'docker-ce' in ansible_facts.packages"
+        fail_msg: "docker-ce package is not installed."
+        success_msg: "docker-ce package is installed."
+
+    - name: "Assert docker-ce-cli package is installed"
+      ansible.builtin.assert:
+        that:
+          - "'docker-ce-cli' in ansible_facts.packages"
+        fail_msg: "docker-ce-cli package is not installed."
+        success_msg: "docker-ce-cli package is installed."
+
+    - name: "Assert containerd.io package is installed"
+      ansible.builtin.assert:
+        that:
+          - "'containerd.io' in ansible_facts.packages"
+        fail_msg: "containerd.io package is not installed."
+        success_msg: "containerd.io package is installed."
+
+    - name: "Assert docker-compose-plugin package is installed"
+      ansible.builtin.assert:
+        that:
+          - "'docker-compose-plugin' in ansible_facts.packages"
+        fail_msg: "docker-compose-plugin package is not installed."
+        success_msg: "docker-compose-plugin package is installed."
+
+    - name: "Gather service facts"
+      ansible.builtin.service_facts:
+
+    - name: "Assert docker service is enabled and running"
+      ansible.builtin.assert:
+        that:
+          - "'docker.service' in ansible_facts.services"
+          - ansible_facts.services['docker.service'].status == 'enabled'
+          - ansible_facts.services['docker.service'].state == 'running'
+        fail_msg: "docker service is not enabled or running."
+        success_msg: "docker service is enabled and running."
+
+    - name: "Verify docker repository is configured"
+      ansible.builtin.stat:
+        path: /etc/apt/sources.list.d/docker.sources
+      register: docker_repo_file
+
+    - name: "Assert docker repository file exists"
+      ansible.builtin.assert:
+        that:
+          - docker_repo_file.stat.exists
+        fail_msg: "Docker repository is not configured."
+        success_msg: "Docker repository is configured."

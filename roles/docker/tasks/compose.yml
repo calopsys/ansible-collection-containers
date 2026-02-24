@@ -1,0 +1,17 @@
+---
+- name: "Ensure compose workdir."
+  ansible.builtin.file:
+    path: "{{ calopsys_docker_compose_workdir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "750"
+
+- name: "Deploy compose template."
+  ansible.builtin.template:
+    src: "{{ calopsys_docker_compose_template }}"
+    dest: "{{ calopsys_docker_compose_workdir }}/compose.yml"
+    owner: root
+    group: root
+    mode: "400"
+  notify: "docker-compose up"
