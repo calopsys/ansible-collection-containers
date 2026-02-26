@@ -14,49 +14,49 @@ test: lint test.sanity molecule
 .PHONY: molecule
 molecule:
 ifdef role
-	molecule test -s $(role)
+	. extensions/molecule/.env.molecule && molecule test -s $(role)
 else
-	molecule test --all
+	. extensions/molecule/.env.molecule && molecule test --all
 endif
 
 .PHONY: molecule.create
 molecule.create:
 ifdef role
-	molecule create -s $(role)
+	. extensions/molecule/.env.molecule && molecule create -s $(role)
 else
-	molecule create --all
+	. extensions/molecule/.env.molecule && molecule create --all
 endif
 
 .PHONY: molecule.converge
 molecule.converge:
 ifdef role
-	molecule converge -s $(role)
+	. extensions/molecule/.env.molecule && molecule converge -s $(role)
 else
-	molecule converge --all
+	. extensions/molecule/.env.molecule && molecule converge --all
 endif
 
 .PHONY: molecule.verify
 molecule.verify:
 ifdef role
-	molecule verify -s $(role)
+	. extensions/molecule/.env.molecule && molecule verify -s $(role)
 else
-	molecule verify --all
+	. extensions/molecule/.env.molecule && molecule verify --all
 endif
 
 .PHONY: molecule.idempotence
 molecule.idempotence:
 ifdef role
-	molecule idempotence -s $(role)
+	. extensions/molecule/.env.molecule && molecule idempotence -s $(role)
 else
-	molecule idempotence --all
+	. extensions/molecule/.env.molecule && molecule idempotence --all
 endif
 
 .PHONY: molecule.destroy
 molecule.destroy:
 ifdef role
-	molecule destroy -s $(role)
+	. extensions/molecule/.env.molecule && molecule destroy -s $(role)
 else
-	molecule destroy --all
+	. extensions/molecule/.env.molecule && molecule destroy --all
 endif
 
 .PHONY: clean

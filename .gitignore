@@ -16,6 +16,7 @@ build/
 .coverage
 .cache
 .pytest_cache/
+.vagrant/
 
 # Environments
 .env

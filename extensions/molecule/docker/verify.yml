@@ -58,3 +58,53 @@
           - docker_repo_file.stat.exists
         fail_msg: "Docker repository is not configured."
         success_msg: "Docker repository is configured."
+
+    - name: "Verify compose workdir exists"
+      ansible.builtin.stat:
+        path: "/opt/testapp"
+      register: compose_workdir
+
+    - name: "Assert compose workdir exists"
+      ansible.builtin.assert:
+        that:
+          - compose_workdir.stat.exists
+          - compose_workdir.stat.isdir
+        fail_msg: "Compose workdir does not exist."
+        success_msg: "Compose workdir exists."
+
+    - name: "Verify compose file exists"
+      ansible.builtin.stat:
+        path: "/opt/testapp/compose.yml"
+      register: compose_file
+
+    - name: "Assert compose file exists"
+      ansible.builtin.assert:
+        that:
+          - compose_file.stat.exists
+        fail_msg: "Compose file does not exist."
+        success_msg: "Compose file exists."
+
+    - name: "Verify compose file content"
+      ansible.builtin.slurp:
+        src: "/opt/testapp/compose.yml"
+      register: compose_content
+
+    - name: "Assert compose file is not empty"
+      ansible.builtin.assert:
+        that:
+          - compose_content.content | length > 0
+        fail_msg: "Compose file is empty."
+        success_msg: "Compose file is not empty."
+
+    - name: "Verify docker can run containers"
+      ansible.builtin.command:
+        cmd: "docker ps"
+      register: docker_ps
+      changed_when: false
+
+    - name: "Assert docker is functional"
+      ansible.builtin.assert:
+        that:
+          - docker_ps.rc == 0
+        fail_msg: "Docker is not functional."
+        success_msg: "Docker is functional."

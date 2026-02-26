@@ -39,10 +39,13 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Set up vagrant and libvirt
+        uses: ./.github/actions/vagrant-setup
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ansible-core molecule molecule-plugins[podman]
+          pip install ansible-core molecule molecule-plugins[vagrant]
 
       - name: Install collection
         run: |
@@ -50,7 +53,9 @@ jobs:
           ln -s $GITHUB_WORKSPACE ~/.ansible/collections/ansible_collections/calopsys/containers
 
       - name: Run Molecule tests
-        run: molecule test --all
+        run: |
+          . extensions/molecule/.env.molecule 2>/dev/null || true
+          molecule test --all
 
   check:
     if: always()

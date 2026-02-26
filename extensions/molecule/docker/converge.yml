@@ -7,12 +7,10 @@
       ansible.builtin.import_role:
         name: calopsys.containers.docker
 
-    # FIXME: can't find a way to make this work inside a podman container
-    # - name: "Deploy foo.compose.yml"
-    #   ansible.builtin.import_role:
-    #     name: calopsys.containers.docker
-    #     tasks_from: compose.yml
-    #   vars:
-    #     calopsys_docker_compose_workdir: "/opt/foo"
-    #     calopsys_docker_compose_template: "foo.compose.yml"
-    #
+    - name: "Deploy compose.yml"
+      ansible.builtin.import_role:
+        name: calopsys.containers.docker
+        tasks_from: compose.yml
+      vars:
+        calopsys_docker_compose_workdir: "/opt/testapp"
+        calopsys_docker_compose_template: "test.compose.yml.j2"
