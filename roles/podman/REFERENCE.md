@@ -1,6 +1,6 @@
 <!-- BEGIN_ANSIBLE_DOCS -->
 # Ansible Role: calopsys.containers.podman
-Version: 1.0.0
+Version: 1.1.0
 
 This role deploys a rootless podman base on a Debian system
 

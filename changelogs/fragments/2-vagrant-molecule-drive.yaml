@@ -1,2 +1,0 @@
-major_changes:
-  - ci - moved to vagrant molecule driver (https://github.com/calopsys/ansible-collection-containers/pull/2)

@@ -3,3 +3,16 @@ ancestor: null
 releases:
   1.0.0:
     release_date: '2026-02-24'
+  1.1.0:
+    changes:
+      major_changes:
+        - ci - moved to vagrant molecule driver (https://github.com/calopsys/ansible-collection-containers/pull/2)
+        - roles - added podman role and ci (https://github.com/calopsys/ansible-collection-containers/pull/3)
+      release_summary: 'Release Date: 2026-02-26
+
+        '
+    fragments:
+      - 2-vagrant-molecule-drive.yaml
+      - 3-podman-role.yaml
+      - v1.1.0_summary.yaml
+    release_date: '2026-02-26'
