@@ -66,35 +66,41 @@
         fail_msg: "containers.conf does not exist."
         success_msg: "containers.conf exists."
 
-    - name: "Verify podman.socket is enabled for testuser"
+    - name: "Verify podman.socket is enabled for testuser"  # noqa: command-instead-of-module
       become: true
       become_user: testuser
       become_method: ansible.builtin.sudo
       become_flags: "-i"
-      ansible.builtin.systemd_service:
-        name: podman.socket
-        scope: user
-        enabled: true
-      register: podman_socket
-
-    - name: "Assert podman.socket is enabled"
-      become: true
-      become_user: testuser
-      become_method: ansible.builtin.sudo
-      become_flags: "-i"
-      ansible.builtin.systemd_service:
-        name: podman.socket
-        scope: user
-      register: podman_socket_state
+      ansible.builtin.command:
+        cmd: "systemctl --user is-enabled podman.socket"
+      register: podman_socket_enabled
+      changed_when: false
       failed_when: false
 
-    - name: "Assert podman.socket is active"
+    - name: "Verify podman.socket is active"  # noqa: command-instead-of-module
+      become: true
+      become_user: testuser
+      become_method: ansible.builtin.sudo
+      become_flags: "-i"
+      ansible.builtin.command:
+        cmd: "systemctl --user is-active podman.socket"
+      register: podman_socket_active
+      changed_when: false
+      failed_when: false
+
+    - name: "Assert podman.socket is enabled"
       ansible.builtin.assert:
         that:
-          - podman_socket_state.active == true
-        fail_msg: "podman.socket is not active."
-        success_msg: "podman.socket is active."
-      when: podman_socket_state is defined and podman_socket_state.active is defined
+          - podman_socket_enabled.rc == 0
+        fail_msg: "podman.socket is not enabled for testuser."
+        success_msg: "podman.socket is enabled for testuser."
+
+    - name: "Assert podman.socket service is running"
+      ansible.builtin.assert:
+        that:
+          - podman_socket_active.stdout == 'active'
+        fail_msg: "podman.socket is not running for testuser."
+        success_msg: "podman.socket is running for testuser."
 
     - name: "Verify linger is enabled for testuser"
       ansible.builtin.stat:
@@ -132,7 +138,7 @@
         fail_msg: "Test compose file does not exist."
         success_msg: "Test compose file exists."
 
-    - name: "Verify systemd service for test application"
+    - name: "Verify systemd service for test application"  # noqa: command-instead-of-module
       become: true
       become_user: testuser
       become_method: ansible.builtin.sudo
@@ -143,7 +149,7 @@
       changed_when: false
       failed_when: false
 
-    - name: "Verify systemd service for test application is running"
+    - name: "Verify systemd service for test application is running"  # noqa: command-instead-of-module
       become: true
       become_user: testuser
       become_method: ansible.builtin.sudo
