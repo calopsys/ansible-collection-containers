@@ -1,0 +1,54 @@
+---
+- name: "Ensure {{ calopsys_podman_group }} group is present."
+  ansible.builtin.group:
+    name: "{{ calopsys_podman_group }}"
+    gid: "{{ calopsys_podman_gid | default(omit) }}"
+
+- name: "Ensure {{ calopsys_podman_user }} user is present."
+  ansible.builtin.user:
+    name: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    home: "{{ calopsys_podman_home }}"
+    uid: "{{ calopsys_podman_uid | default(omit) }}"
+    shell: "/bin/bash"
+    create_home: true
+    password_lock: true
+
+- name: "Ensure {{ calopsys_podman_user }} user home config directories."
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "0750"
+    state: directory
+  loop:
+    - "{{ calopsys_podman_home }}"
+    - "{{ calopsys_podman_home }}/.config/containers"
+    - "{{ calopsys_podman_home }}/.config/systemd/user"
+
+- name: "Ensure {{ calopsys_podman_user }} user home config files."
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "0640"
+  loop:
+    - { src: bash_profile.j2, dest: "{{ calopsys_podman_home }}/.bash_profile" }
+    - { src: "{{ calopsys_podman_containers_config_template }}", dest: "{{ calopsys_podman_home }}/.config/containers/containers.conf" }
+
+- name: "Ensure lingering is enabled for {{ calopsys_podman_user }} user."
+  ansible.builtin.command:
+    cmd: "loginctl enable-linger {{ calopsys_podman_user }}"
+    creates: "/var/lib/systemd/linger/{{ calopsys_podman_user }}"
+
+- name: "Ensure {{ calopsys_podman_user }} podman.socket is started and enabled."
+  become: true
+  become_user: "{{ calopsys_podman_user }}"
+  become_method: ansible.builtin.sudo
+  become_flags: "-i"
+  ansible.builtin.systemd_service:
+    name: "podman.socket"
+    state: started
+    enabled: true
+    scope: user

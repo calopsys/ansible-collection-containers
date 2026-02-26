@@ -1,0 +1,43 @@
+---
+- name: "Ensure {{ calopsys_podman_application_name }} application dir permissions."
+  ansible.builtin.file:
+    path: "{{ calopsys_podman_application_dir }}"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "{{ calopsys_podman_application_dir_mode }}"
+    state: directory
+
+- name: "Deploy {{ calopsys_podman_application_name }} application compose file."
+  ansible.builtin.template:
+    src: "{{ calopsys_podman_application_compose_template }}"
+    dest: "{{ calopsys_podman_application_dir }}/compose.yaml"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "0600"
+  notify:
+    - "systemctl --user restart {{ calopsys_podman_application_name }}"
+
+- name: "Deploy {{ calopsys_podman_application_name }} application systemd unit."
+  ansible.builtin.template:
+    src: "application_systemd_unit.j2"
+    dest: "{{ calopsys_podman_home }}/.config/systemd/user/{{ calopsys_podman_application_name }}.service"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "0600"
+  notify:
+    - "systemctl --user daemon-reload {{ calopsys_podman_application_name }}"
+    - "systemctl --user restart {{ calopsys_podman_application_name }}"
+
+- name: "Flush handlers."
+  ansible.builtin.meta: flush_handlers
+
+- name: "Ensure {{ calopsys_podman_application_name }} application is started and enabled."
+  become: true
+  become_user: "{{ calopsys_podman_user }}"
+  become_method: ansible.builtin.sudo
+  become_flags: "-i"
+  ansible.builtin.systemd_service:
+    name: "{{ calopsys_podman_application_name }}"
+    state: started
+    enabled: true
+    scope: user

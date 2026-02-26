@@ -1,0 +1,18 @@
+{{ ansible_managed | comment }}
+[Unit]
+Description={{ calopsys_podman_application_name }} on rootless podman with compose file.
+After=podman.socket
+
+[Service]
+Type=notify
+NotifyAccess=all
+Restart=on-abnormal
+
+WorkingDirectory={{ calopsys_podman_application_dir }}
+
+ExecStartPre=-podman-compose --no-ansi pull
+ExecStart=podman-compose --podman-run-args="--sdnotify={{ calopsys_podman_application_sdnotify }}" --no-ansi up --abort-on-container-exit
+ExecStop=podman-compose --no-ansi down
+
+[Install]
+WantedBy=default.target

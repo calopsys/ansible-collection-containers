@@ -1,0 +1,21 @@
+---
+- name: Converge
+  hosts: instance
+  become: true
+  tasks:
+    - name: "Import podman role"
+      ansible.builtin.import_role:
+        name: calopsys.containers.podman
+      vars:
+        calopsys_podman_user: "testuser"
+        calopsys_podman_uid: "1100"
+        calopsys_podman_gid: "1100"
+
+    - name: "Deploy test application"
+      ansible.builtin.import_role:
+        name: calopsys.containers.podman
+        tasks_from: compose.yml
+      vars:
+        calopsys_podman_user: "testuser"
+        calopsys_podman_application_name: "testapp"
+        calopsys_podman_application_compose_template: "test.compose.yml.j2"

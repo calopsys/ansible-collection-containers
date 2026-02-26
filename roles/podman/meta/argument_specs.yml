@@ -1,0 +1,67 @@
+---
+argument_specs:
+  main:
+    short_description: "Installs and configures the podman rootless base on a Debian system."
+    options:
+      calopsys_podman_unprivileged_port_start:
+        type: "str"
+        description: "Port number to pass to sysctl net.ipv4.ip_unprivileged_port."
+      calopsys_podman_user:
+        type: "str"
+        description: "The unix user that will be configured to manage the podman rootless containers."
+        required: true
+      calopsys_podman_group:
+        type: "str"
+        description: "The unix group of calopsys_podman_user."
+        default: "{{ calopsys_podman_user }}"
+      calopsys_podman_home:
+        type: "str"
+        description: "The home of calopsys_podman_user."
+        default: "/opt/{{ calopsys_podman_user }}"
+      calopsys_podman_uid:
+        type: "int"
+        description: "A custom UID for calopsys_podman_user."
+      calopsys_podman_gid:
+        type: "int"
+        description: "A custom GID for calopsys_podman_group."
+      calopsys_podman_containers_config_template:
+        type: "str"
+        description:
+          - "Local path to the template for the containers.conf configuration file."
+          - "This file will be put under calopsys_podman_user homedir."
+        default: "containers.conf.j2"
+      calopsys_podman_tz:
+        type: "str"
+        description: "Sets the default timezone for all containers, in the default containers.conf template."
+        default: "UTC"
+      calopsys_podman_registries:
+        type: "list"
+        elements: "dict"
+        description: "List of container registries to connect to podman user onto."
+      calopsys_podman_registries_config_template:
+        type: "str"
+        description: "The ansible template for registries.conf. See https://github.com/containers/image/blob/main/docs/containers-registries.conf.5.md"
+      calopsys_podman_application_name:
+        type: "str"
+        description:
+          - "The name of the application to deploy."
+          - "This is used mainly for the systemd unit filename and the default application_dir."
+        default: ""
+      calopsys_podman_application_dir:
+        type: "str"
+        description: "The base directory to deploy the application compose to."
+        default: "{{ calopsys_podman_home }}/{{ calopsys_podman_application_name }}"
+      calopsys_podman_application_dir_mode:
+        type: "str"
+        description: "The permissions to apply to the base directory to deploy the application compose to."
+        default: "0750"
+      calopsys_podman_application_compose_template:
+        type: "str"
+        description: "Local path to the docker compose template for the application."
+      calopsys_podman_application_sdnotify:
+        type: "str"
+        description:
+          - "Configures podman to send a systemd-notify to the systemd unit either when the container is started or when the container is healthy."
+          - "Our default is `healthy`, which means we have to configure a healthcheck for every service of every compose file."
+          - "See https://docs.podman.io/en/stable/markdown/podman-run.1.html#sdnotify-container-conmon-healthy-ignore"
+        default: "healthy"

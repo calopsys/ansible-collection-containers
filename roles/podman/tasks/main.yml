@@ -1,0 +1,12 @@
+---
+- name: "Import install.yml."
+  ansible.builtin.import_tasks: "install.yml"
+  tags: ["calopsys_podman_install"]
+
+- name: "Import user.yml."
+  ansible.builtin.import_tasks: "user.yml"
+  tags: ["calopsys_podman_user"]
+
+- name: "Import registries.yml."
+  ansible.builtin.import_tasks: "registries.yml"
+  tags: ["calopsys_podman_registries"]

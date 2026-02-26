@@ -1,0 +1,2 @@
+major_changes:
+  - roles - added podman role and ci (https://github.com/calopsys/ansible-collection-containers/pull/3)

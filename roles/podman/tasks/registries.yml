@@ -1,0 +1,23 @@
+---
+- name: "Login user {{ calopsys_podman_user }} to container registries"
+  become: true
+  become_user: "{{ calopsys_podman_user }}"
+  become_method: ansible.builtin.sudo
+  become_flags: "-i"
+  when: calopsys_podman_registries is defined and calopsys_podman_registries | length > 0
+  no_log: true
+  containers.podman.podman_login:
+    username: "{{ item.username }}"
+    secret: "{{ item.secret | default(omit) }}"
+    password: "{{ item.password | default(omit) }}"
+    registry: "{{ item.registry }}"
+  loop: "{{ calopsys_podman_registries }}"
+
+- name: "Ensure registries.conf for user {{ calopsys_podman_user }}"
+  when: calopsys_podman_registries_config_template is defined and calopsys_podman_registries_config_template | length > 0
+  ansible.builtin.template:
+    src: "{{ calopsys_podman_registries_config_template }}"
+    dest: "{{ calopsys_podman_home }}/.config/containers/registries.conf"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "0640"

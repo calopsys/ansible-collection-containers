@@ -1,0 +1,22 @@
+---
+## We need to make all handler names dynamic or none of them, because if we import the role multiple times
+#  the non-dynamic handlers will be overriden by the last import and fckup the execution order.
+#  See https://github.com/ansible/ansible/issues/77253#issuecomment-1064087926
+- name: "systemctl --user daemon-reload {{ calopsys_podman_application_name }}"
+  become: true
+  become_user: "{{ calopsys_podman_user }}"
+  become_method: ansible.builtin.sudo
+  become_flags: "-i"
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+    scope: user
+
+- name: "systemctl --user restart {{ calopsys_podman_application_name }}"
+  become: true
+  become_user: "{{ calopsys_podman_user }}"
+  become_method: ansible.builtin.sudo
+  become_flags: "-i"
+  ansible.builtin.systemd_service:
+    name: "{{ calopsys_podman_application_name }}"
+    state: restarted
+    scope: user
