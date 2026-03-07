@@ -16,3 +16,14 @@ releases:
       - 3-podman-role.yaml
       - v1.1.0_summary.yaml
     release_date: '2026-02-26'
+  1.2.0:
+    changes:
+      major_changes:
+        - ci - moved to lima molecule driver (https://github.com/calopsys/ansible-collection-containers/pull/5)
+      release_summary: 'Release Date: 2026-02-26
+
+        '
+    fragments:
+      - 5-lima-molecule-driver.yaml
+      - v1.2.0_summary.yaml
+    release_date: '2026-03-08'
