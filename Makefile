@@ -6,7 +6,7 @@ lint:
 
 .PHONY: test.sanity
 test.sanity: clean
-	ansible-test sanity --docker -v --exclude LICENSE
+	ansible-test sanity --docker -v
 
 .PHONY: test
 test: lint test.sanity molecule
@@ -14,49 +14,49 @@ test: lint test.sanity molecule
 .PHONY: molecule
 molecule:
 ifdef role
-	. extensions/molecule/.env.molecule && molecule test -s $(role)
+	molecule test -s $(role)
 else
-	. extensions/molecule/.env.molecule && molecule test --all
+	molecule test --all
 endif
 
 .PHONY: molecule.create
 molecule.create:
 ifdef role
-	. extensions/molecule/.env.molecule && molecule create -s $(role)
+	molecule create -s $(role)
 else
-	. extensions/molecule/.env.molecule && molecule create --all
+	molecule create --all
 endif
 
 .PHONY: molecule.converge
 molecule.converge:
 ifdef role
-	. extensions/molecule/.env.molecule && molecule converge -s $(role)
+	molecule converge -s $(role)
 else
-	. extensions/molecule/.env.molecule && molecule converge --all
+	molecule converge --all
 endif
 
 .PHONY: molecule.verify
 molecule.verify:
 ifdef role
-	. extensions/molecule/.env.molecule && molecule verify -s $(role)
+	molecule verify -s $(role)
 else
-	. extensions/molecule/.env.molecule && molecule verify --all
+	molecule verify --all
 endif
 
 .PHONY: molecule.idempotence
 molecule.idempotence:
 ifdef role
-	. extensions/molecule/.env.molecule && molecule idempotence -s $(role)
+	molecule idempotence -s $(role)
 else
-	. extensions/molecule/.env.molecule && molecule idempotence --all
+	molecule idempotence --all
 endif
 
 .PHONY: molecule.destroy
 molecule.destroy:
 ifdef role
-	. extensions/molecule/.env.molecule && molecule destroy -s $(role)
+	molecule destroy -s $(role)
 else
-	. extensions/molecule/.env.molecule && molecule destroy --all
+	molecule destroy --all
 endif
 
 .PHONY: clean
