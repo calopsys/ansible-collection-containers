@@ -15,7 +15,7 @@ Create a `galaxy_requirements.yml` file:
 collections:
   - name: git@github.com:calopsys/ansible-collection-containers.git
     type: git
-    version: "1.0.0"
+    version: "1.2.0"
 ```
 
 Then run:
