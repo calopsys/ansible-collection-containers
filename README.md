@@ -18,6 +18,7 @@ collections:
     version: "1.2.0"
 ```
 
+
 Then run:
 ```bash
 ansible-galaxy collection install -r galaxy_requirements.yml
