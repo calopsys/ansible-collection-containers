@@ -27,7 +27,7 @@ To deploy an application using a compose file:
 - name: "Create application."
   ansible.builtin.import_role:
     name: calopsys.containers.podman
-    tasks_from: compose.yml
+    tasks_from: application.yml
   vars:
     calopsys_podman_user: "app"
     calopsys_podman_application_name: "app"
@@ -53,7 +53,7 @@ To deploy an application using a compose file:
     - name: "Deploy application"
       ansible.builtin.import_role:
         name: calopsys.containers.podman
-        tasks_from: compose.yml
+        tasks_from: application.yml
       vars:
         calopsys_podman_user: "app"
         calopsys_podman_application_name: "app"

@@ -1,0 +1,143 @@
+---
+- name: "Clean up {{ calopsys_podman_application_name }} application rollback directory."
+  when: calopsys_podman_application_rollback_enabled
+  ansible.builtin.file:
+    path: "{{ calopsys_podman_application_dir }}.rollback"
+    state: absent
+
+- name: "Check if {{ calopsys_podman_application_name }} application directory exists for backup."
+  when: calopsys_podman_application_rollback_enabled
+  ansible.builtin.stat:
+    path: "{{ calopsys_podman_application_dir }}"
+  register: app_dir_stat
+
+# INFO: We use `cp` here because the copy module breaks ownership in every case
+- name: "Backup {{ calopsys_podman_application_name }} application directory for potential rollback."
+  when: calopsys_podman_application_rollback_enabled and app_dir_stat.stat.exists
+  ansible.builtin.command:
+    cmd: "cp -a {{ calopsys_podman_application_dir }}/. {{ calopsys_podman_application_dir }}.rollback/"
+  changed_when: true
+
+- name: "Deploy {{ calopsys_podman_application_name }} application systemd unit."
+  ansible.builtin.template:
+    src: "application_systemd_unit.j2"
+    dest: "{{ calopsys_podman_home }}/.config/systemd/user/{{ calopsys_podman_application_name }}.service"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "0600"
+  notify:
+    - "systemctl --user daemon-reload {{ calopsys_podman_application_name }}"
+    - "systemctl --user restart {{ calopsys_podman_application_name }}"
+
+- name: "Deploy {{ calopsys_podman_application_name }} application systemd ExecStart script."
+  ansible.builtin.copy:
+    src: "application_execstart.sh"
+    dest: "{{ calopsys_podman_home }}/.config/systemd/user/{{ calopsys_podman_application_name }}.sh"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "0700"
+  notify:
+    - "systemctl --user restart {{ calopsys_podman_application_name }}"
+
+- name: "Ensure {{ calopsys_podman_application_name }} application directory."
+  ansible.builtin.file:
+    path: "{{ calopsys_podman_application_dir }}"
+    owner: "{{ calopsys_podman_user }}"
+    group: "{{ calopsys_podman_group }}"
+    mode: "{{ calopsys_podman_application_dir_mode }}"
+    state: directory
+
+- name: "Deploy and start {{ calopsys_podman_application_name }}."
+  become: true
+  become_user: "{{ calopsys_podman_user }}"
+  become_method: ansible.builtin.sudo
+  become_flags: "-i"
+  block:
+    # INFO:
+    #  - we want some files (env files, config files...) to be accessible by a subuid inside the container
+    #  - Linux does not really care if the subuid belongs to you when checking the permissions -
+    #    that means everything kind of breaks for calopsys_podman_user if the file is only accessible by the subuid
+    # In the end what we do is :
+    #  - Deploy everything as 2770 or 0660
+    #  - If no container_uid →  owner and group set to calopsys_podman_user
+    #  - If container_uid →  owner set to container_uid with `podman unshare`, group stays to calopsys_podman_user (2770/0660 makes it so it doesn't break)
+    #  - The user can still change container_gid if he knows what he's doing, **but it will probably break stuff**
+    - name: "Ensure {{ calopsys_podman_application_name }} application directories"
+      ansible.builtin.include_tasks: application/directories.yml
+      loop: "{{ calopsys_podman_application_directories | default([]) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      when:
+        - calopsys_podman_application_directories is defined
+        - calopsys_podman_application_directories | length > 0
+        - item.when | default(true)
+
+    - name: "Ensure {{ calopsys_podman_application_name }} application files"
+      ansible.builtin.include_tasks: application/files.yml
+      loop: "{{ calopsys_podman_application_files | default([]) }}"
+      loop_control:
+        label: "{{ item.dest }}"
+      when:
+        - calopsys_podman_application_files is defined
+        - calopsys_podman_application_files | length > 0
+        - item.when | default(true)
+
+    - name: "Deploy {{ calopsys_podman_application_name }} application compose file."
+      ansible.builtin.template:
+        src: "{{ calopsys_podman_application_compose_template }}"
+        dest: "{{ calopsys_podman_application_dir }}/compose.yaml"
+        owner: "{{ calopsys_podman_user }}"
+        group: "{{ calopsys_podman_group }}"
+        mode: "0600"
+      notify:
+        - "systemctl --user restart {{ calopsys_podman_application_name }}"
+
+    - name: "Flush handlers."
+      ansible.builtin.meta: flush_handlers
+
+    - name: "Ensure {{ calopsys_podman_application_name }} application is started and enabled."
+      ansible.builtin.systemd_service:
+        name: "{{ calopsys_podman_application_name }}"
+        state: started
+        enabled: true
+        scope: user
+
+    # INFO: This will only runs if the deploy works.
+    - name: "Clean up {{ calopsys_podman_application_name }} application rollback directory."
+      when: calopsys_podman_application_rollback_enabled
+      ansible.builtin.file:
+        path: "{{ calopsys_podman_application_dir }}.rollback"
+        state: absent
+
+  rescue:
+    - name: "Perform rollback on {{ calopsys_podman_application_name }}."
+      become: true
+      become_user: "{{ calopsys_podman_user }}"
+      become_method: ansible.builtin.sudo
+      become_flags: "-i"
+      when: calopsys_podman_application_rollback_enabled
+      block:
+        - name: "ROLLBACK | Remove broken application directory."
+          ansible.builtin.file:
+            path: "{{ calopsys_podman_application_dir }}"
+            state: absent
+
+        - name: "ROLLBACK | Restore {{ calopsys_podman_application_name }} directory from rollback."
+          ansible.builtin.command:
+            cmd: "mv {{ calopsys_podman_application_dir }}.rollback {{ calopsys_podman_application_dir }}"
+          changed_when: true
+
+        # INFO: We can't use the handlers here because if any task fails,
+        # Ansible stops the execution on the host, and doesn't run the handlers.
+        - name: "ROLLBACK | systemctl --user restart {{ calopsys_podman_application_name }}"
+          ansible.builtin.systemd_service:
+            name: "{{ calopsys_podman_application_name }}"
+            state: restarted
+            scope: user
+
+    - name: "Fail deployment."
+      ansible.builtin.fail:
+        msg: >-
+          {{ "Deployment failed, rollback performed."
+             if calopsys_podman_application_rollback_enabled
+             else "Deployment failed, no rollback performed as it is disabled." }}

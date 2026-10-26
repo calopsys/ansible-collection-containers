@@ -1,18 +1,27 @@
 {{ ansible_managed | comment }}
 [Unit]
 Description={{ calopsys_podman_application_name }} on rootless podman with compose file.
-After=podman.socket
+Wants=network-online.target podman.socket
+After=network-online.target podman.socket
 
 [Service]
 Type=notify
 NotifyAccess=all
-Restart=on-abnormal
+Restart={{ calopsys_podman_application_restart_policy }}
 
 WorkingDirectory={{ calopsys_podman_application_dir }}
 
 ExecStartPre=-podman-compose --no-ansi pull
-ExecStart=podman-compose --podman-run-args="--sdnotify={{ calopsys_podman_application_sdnotify }}" --no-ansi up --abort-on-container-exit
-ExecStop=podman-compose --no-ansi down
+ExecStart=%h/.config/systemd/user/{{ calopsys_podman_application_name }}.sh
+
+# This allows graceful stop before SIGKILL
+ExecStop=podman-compose --no-ansi stop
+# ExecStopPost executes on any stop, including failure to avoids leftover pieces of namespace
+ExecStopPost=podman-compose --no-ansi down
+
+Environment=TIMEOUT={{ calopsys_podman_application_timeout }}
+# TIMEOUT + 30s buffer for podman-compose overhead (pulling, network setup, etc.)
+TimeoutStartSec={{ calopsys_podman_application_timeout + 30 }}
 
 [Install]
 WantedBy=default.target

@@ -21,6 +21,29 @@
         fail_msg: "podman-compose package is not installed."
         success_msg: "podman-compose package is installed."
 
+    - name: "Read the podman role defaults"
+      ansible.builtin.include_vars:
+        file: "{{ playbook_dir }}/../../../roles/podman/defaults/main.yml"
+
+    - name: "Compare the installed podman-compose version with the pinned version"
+      ansible.builtin.command:
+        argv:
+          - dpkg
+          - --compare-versions
+          - "{{ ansible_facts.packages['podman-compose'][0].version }}"
+          - ge
+          - "{{ calopsys_podman_compose_version }}"
+      register: podman_compose_version_check
+      changed_when: false
+      failed_when: podman_compose_version_check.rc > 1
+
+    - name: "Assert podman-compose has the pinned version or a newer one"
+      ansible.builtin.assert:
+        that:
+          - podman_compose_version_check.rc == 0
+        fail_msg: "podman-compose version is {{ ansible_facts.packages['podman-compose'][0].version }}, older than {{ calopsys_podman_compose_version }}."
+        success_msg: "podman-compose version is {{ ansible_facts.packages['podman-compose'][0].version }}."
+
     - name: "Verify testuser exists"
       ansible.builtin.user:
         name: "testuser"
@@ -185,3 +208,114 @@
           - compose_content.content | length > 0
         fail_msg: "Compose file is empty."
         success_msg: "Compose file is not empty."
+
+    - name: "Verify application env file exists"
+      ansible.builtin.stat:
+        path: "/opt/testuser/testapp/config/app.env"
+      register: app_env_file
+
+    - name: "Assert application env file exists"
+      ansible.builtin.assert:
+        that:
+          - app_env_file.stat.exists
+        fail_msg: "Application env file does not exist."
+        success_msg: "Application env file exists."
+
+    - name: "Assert application env file has correct permissions"
+      ansible.builtin.assert:
+        that:
+          - app_env_file.stat.mode | int == 640
+        fail_msg: "Application env file has incorrect permissions."
+        success_msg: "Application env file has correct permissions."
+
+    - name: "Verify application config directory exists"
+      ansible.builtin.stat:
+        path: "/opt/testuser/testapp/config"
+      register: app_config_dir
+
+    - name: "Assert application config directory exists"
+      ansible.builtin.assert:
+        that:
+          - app_config_dir.stat.exists
+        fail_msg: "Application config directory does not exist."
+        success_msg: "Application config directory exists."
+
+    - name: "Verify application config directory permissions"
+      ansible.builtin.stat:
+        path: "/opt/testuser/testapp/config"
+      register: app_config_dir_perms
+
+    - name: "Assert application config directory has correct permissions"
+      ansible.builtin.assert:
+        that:
+          - app_config_dir_perms.stat.mode | int == 2770
+        fail_msg: "Application config directory has incorrect permissions."
+        success_msg: "Application config directory has correct permissions."
+
+    - name: "Verify application config file exists"
+      ansible.builtin.stat:
+        path: "/opt/testuser/testapp/config/app.config"
+      register: app_config_file
+
+    - name: "Assert application config file exists"
+      ansible.builtin.assert:
+        that:
+          - app_config_file.stat.exists
+        fail_msg: "Application config file does not exist."
+        success_msg: "Application config file exists."
+
+    - name: "Assert application config file has correct permissions"
+      ansible.builtin.assert:
+        that:
+          - app_config_file.stat.mode | int == 660
+        fail_msg: "Application config file has incorrect permissions."
+        success_msg: "Application config file has correct permissions."
+
+    - name: "Get subuid range for testuser"
+      ansible.builtin.shell:
+        cmd: "awk -F: '/^testuser:/ {print $2}' /etc/subuid"
+      register: testuser_subuid_start
+      changed_when: false
+      failed_when: false
+
+    - name: "Calculate expected container uid"
+      ansible.builtin.set_fact:
+        expected_container_uid: "{{ (testuser_subuid_start.stdout | int) + 999 - 1 }}"
+
+    - name: "Assert application config file has correct owner"
+      ansible.builtin.assert:
+        that:
+          - app_config_file.stat.uid == expected_container_uid | int
+        fail_msg: "Application config file has incorrect owner."
+        success_msg: "Application config file has correct owner."
+
+    - name: "Assert application config file has correct group"
+      ansible.builtin.assert:
+        that:
+          - app_config_file.stat.gid == 1100
+        fail_msg: "Application config file has incorrect group."
+        success_msg: "Application config file has correct group."
+
+    - name: "Verify application config file content"
+      ansible.builtin.slurp:
+        src: "/opt/testuser/testapp/config/app.config"
+      register: app_config_content
+
+    - name: "Assert application config file content is correct"
+      ansible.builtin.assert:
+        that:
+          - app_config_content.content | b64decode == "# this is a configuration\n"
+        fail_msg: "Application config file content is incorrect."
+        success_msg: "Application config file content is correct."
+
+    - name: "Verify application env file content"
+      ansible.builtin.slurp:
+        src: "/opt/testuser/testapp/config/app.env"
+      register: app_env_content
+
+    - name: "Assert application env file content is correct"
+      ansible.builtin.assert:
+        that:
+          - app_env_content.content | b64decode == "TEST_ENV_VAR=hello_world\nTEST_ANOTHER_VAR=12345\n"
+        fail_msg: "Application env file content is incorrect."
+        success_msg: "Application env file content is correct."

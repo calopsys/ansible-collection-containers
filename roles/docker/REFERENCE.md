@@ -1,6 +1,6 @@
 <!-- BEGIN_ANSIBLE_DOCS -->
 # Ansible Role: calopsys.containers.docker
-Version: 1.2.0
+Version: 1.3.0
 
 This role installs, manages and configures the Docker daemon on Debian systems.
 
