@@ -27,3 +27,34 @@ releases:
       - 5-lima-molecule-driver.yaml
       - v1.2.0_summary.yaml
     release_date: '2026-03-08'
+  1.3.0:
+    changes:
+      breaking_changes:
+        - podman - the role removed the variable ``calopsys_podman_application_sdnotify``.
+        - 'podman - the role replaced ``tasks/compose.yml`` with ``tasks/application.yml``.
+          Change ``tasks_from: compose.yml`` to ``tasks_from: application.yml``.'
+      bugfixes:
+        - podman - ``podman_login`` stores the auth file in ``~/.config/containers/auth.json``
+          instead of ``$XDG_RUNTIME_DIR``. Registry logins now persist after a reboot.
+      minor_changes:
+        - podman - added the variable ``calopsys_podman_application_rollback_enabled``.
+          When a deployment fails, the role restores the previous application directory.
+        - podman - added the variables ``calopsys_podman_application_directories``
+          and ``calopsys_podman_application_files`` to create application directories
+          and files.
+        - podman - added the variables ``calopsys_podman_application_restart_policy``
+          and ``calopsys_podman_application_timeout``.
+        - podman - added the variables ``calopsys_podman_compose_deb_url`` and ``calopsys_podman_compose_deb_checksum``
+          to set an alternative package source.
+        - podman - the role installs podman-compose version ``calopsys_podman_compose_version``
+          (default ``1.6.0-1``) from snapshot.debian.org instead of the Debian repository.
+          The hosts must have access to snapshot.debian.org, or you must set ``calopsys_podman_compose_deb_url``.
+        - podman - the systemd ExecStart script fails when compose declares more services
+          than it created.
+        - podman - the systemd unit starts the application with an ExecStart script.
+          The script waits until all containers are healthy.
+        - podman - the systemd unit stops the application with ``podman-compose stop``
+          in ``ExecStop`` and ``podman-compose down`` in ``ExecStopPost``.
+    fragments:
+      - podman_files_dirs.yml
+    release_date: '2026-10-26'
